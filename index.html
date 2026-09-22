@@ -3,79 +3,171 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PVC Card Cutter & Generator</title>
+  <title>Auto PVC Card Cutter from PDF</title>
+  
+  <!-- PDF.js Library included for processing PDF files in browser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
     body { background-color: #f4f6f9; padding: 15px; text-align: center; }
     .container { max-width: 500px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     h2 { color: #2c3e50; margin-bottom: 15px; font-size: 20px; }
-    .input-group { margin-bottom: 15px; text-align: left; }
-    label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px; color: #333; }
-    input[type="file"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; background: #f9f9f9; }
-    .preview-section { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; align-items: center; }
-    .card-box { width: 323px; height: 204px; border: 2px dashed #007bff; border-radius: 10px; overflow: hidden; position: relative; background: #fafafa; display: flex; justify-content: center; align-items: center; }
-    .card-box img { width: 100%; height: 100%; object-fit: fill; display: none; }
-    .placeholder-text { color: #888; font-size: 13px; }
-    .btn-print { margin-top: 20px; width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    .btn-print:active { background-color: #218838; }
+    
+    .input-group { margin-bottom: 20px; text-align: left; }
+    label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 14px; color: #333; }
+    input[type="file"] { width: 100%; padding: 12px; border: 2px dashed #007bff; border-radius: 8px; background: #f0f7ff; cursor: pointer; }
+    
+    .status { margin: 10px 0; font-weight: bold; color: #d9534f; font-size: 14px; }
 
+    .preview-section { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; align-items: center; }
+    
+    .card-box {
+      width: 323px; /* Standard PVC Ratio */
+      height: 204px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fafafa;
+      position: relative;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    canvas { width: 100%; height: 100%; }
+
+    .btn-print {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-print:disabled { background-color: #ccc; cursor: not-allowed; }
+
+    /* Print Layout for standard PVC sizes */
     @media print {
       body * { visibility: hidden; }
       .print-area, .print-area * { visibility: visible; }
       .print-area { position: absolute; left: 0; top: 0; display: flex; flex-wrap: wrap; gap: 10px; }
-      .card-box { width: 85.6mm !important; height: 53.98mm !important; border: 1px solid #000 !important; border-radius: 3mm !important; page-break-inside: avoid; }
+      .card-box {
+        width: 85.6mm !important;
+        height: 53.98mm !important;
+        border: 0.5px solid #000 !important;
+        border-radius: 3mm !important;
+        page-break-inside: avoid;
+      }
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h2>অল-টাইপ PVC কার্ড প্রস্তুতকারক</h2>
+    <h2>অটোমেটিক PDF to PVC কার্ড কাটার</h2>
     
     <div class="input-group">
-      <label>সামনের অংশ (Front Side):</label>
-      <input type="file" id="frontInput" accept="image/*">
+      <label>পিডিএফ ফাইল সিলেক্ট করুন (Aadhaar / Voter / PAN):</label>
+      <input type="file" id="pdfInput" accept="application/pdf">
     </div>
 
-    <div class="input-group">
-      <label>পেছনের অংশ (Back Side):</label>
-      <input type="file" id="backInput" accept="image/*">
-    </div>
+    <div class="status" id="statusText"></div>
 
-    <div class="preview-section print-area">
-      <div class="card-box">
-        <span class="placeholder-text" id="frontTxt">Front Side Preview</span>
-        <img id="frontPreview" alt="Front Side">
+    <div class="preview-section print-area" id="printArea">
+      <!-- Front Card Canvas -->
+      <div>
+        <p style="font-size: 12px; color: #555; margin-bottom: 3px;">Front Side (সামনের অংশ)</p>
+        <div class="card-box">
+          <canvas id="frontCanvas"></canvas>
+        </div>
       </div>
 
-      <div class="card-box">
-        <span class="placeholder-text" id="backTxt">Back Side Preview</span>
-        <img id="backPreview" alt="Back Side">
+      <!-- Back Card Canvas -->
+      <div>
+        <p style="font-size: 12px; color: #555; margin-bottom: 3px;">Back Side (পেছনের অংশ)</p>
+        <div class="card-box">
+          <canvas id="backCanvas"></canvas>
+        </div>
       </div>
     </div>
 
-    <button class="btn-print" onclick="window.print()">প্রিন্ট / PDF ডাউনলোড</button>
+    <button class="btn-print" id="printBtn" onclick="window.print()" disabled>প্রিন্ট / PDF ডাউনলোড</button>
   </div>
 
   <script>
-    function setupImagePreview(inputId, imgId, txtId) {
-      document.getElementById(inputId).addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function(event) {
-            const img = document.getElementById(imgId);
-            img.src = event.target.result;
-            img.style.display = 'block';
-            document.getElementById(txtId).style.display = 'none';
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-    }
+    // PDF.js worker setup
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-    setupImagePreview('frontInput', 'frontPreview', 'frontTxt');
-    setupImagePreview('backInput', 'backPreview', 'backTxt');
+    document.getElementById('pdfInput').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      const status = document.getElementById('statusText');
+      const printBtn = document.getElementById('printBtn');
+      
+      if (!file) return;
+
+      status.innerText = "PDF প্রসেস করা হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...";
+      printBtn.disabled = true;
+
+      const fileReader = new FileReader();
+      fileReader.onload = async function() {
+        const typedarray = new Uint8Array(this.result);
+        
+        try {
+          const pdf = await pdfjsLib.getDocument(typedarray).promise;
+          const page = await pdf.getPage(1); // Read first page
+          
+          const viewport = page.getViewport({ scale: 2.0 }); // High resolution rendering
+          
+          // Temporary hidden canvas to render full PDF page
+          const tempCanvas = document.createElement('canvas');
+          const tempCtx = tempCanvas.getContext('2d');
+          tempCanvas.width = viewport.width;
+          tempCanvas.height = viewport.width * (11 / 8.5); // Maintain standard aspect ratio
+
+          await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
+
+          // Process Front Side Crop
+          cropCard(tempCanvas, 'frontCanvas', 0.1, 0.55); // Top portion of PDF
+          
+          // Process Back Side Crop
+          cropCard(tempCanvas, 'backCanvas', 0.55, 0.98); // Bottom/Middle portion of PDF
+
+          status.innerText = "কার্ড সফলভাবে তৈরি হয়েছে!";
+          status.style.color = "green";
+          printBtn.disabled = false;
+        } catch (error) {
+          console.error(error);
+          status.innerText = "PDF ফাইলটি পড়তে সমস্যা হয়েছে। সঠিক ফাইল আপলোড করুন।";
+          status.style.color = "red";
+        }
+      };
+
+      fileReader.readAsArrayBuffer(file);
+    });
+
+    function cropCard(sourceCanvas, targetCanvasId, startYPercent, endYPercent) {
+      const targetCanvas = document.getElementById(targetCanvasId);
+      const ctx = targetCanvas.getContext('2d');
+
+      // Standard PVC Dimensions Ratio
+      targetCanvas.width = 1012;
+      targetCanvas.height = 638;
+
+      const srcWidth = sourceCanvas.width * 0.88; // Crop side margins slightly
+      const srcHeight = sourceCanvas.height * (endYPercent - startYPercent);
+      const srcX = sourceCanvas.width * 0.06; // Center horizontally
+      const srcY = sourceCanvas.height * startYPercent;
+
+      // Draw cropped area onto target PVC Canvas
+      ctx.drawImage(
+        sourceCanvas,
+        srcX, srcY, srcWidth, srcHeight,
+        0, 0, targetCanvas.width, targetCanvas.height
+      );
+    }
   </script>
 
 </body>
