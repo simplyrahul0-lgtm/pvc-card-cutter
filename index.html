@@ -16,9 +16,8 @@
     .status { margin: 10px 0; font-weight: bold; color: #007bff; font-size: 14px; }
     .preview-section { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; align-items: center; }
     
-    /* Strict PVC CR80 Dimensions */
     .card-box {
-      width: 323px; /* Standard Pixel aspect ratio for display */
+      width: 323px;
       height: 204px;
       border: 1px solid #000;
       border-radius: 8px;
@@ -30,7 +29,6 @@
     .btn-print { margin-top: 20px; width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
     .btn-print:disabled { background-color: #ccc; }
 
-    /* Strict Physical PVC Dimensions for Printing (85.6mm x 53.98mm) */
     @media print {
       body * { visibility: hidden; }
       .print-area, .print-area * { visibility: visible; }
@@ -53,8 +51,8 @@
     <div class="input-group">
       <label>১. কার্ডের ধরন নির্বাচন করুন:</label>
       <select id="cardType">
-        <option value="aadhaar">আধার কার্ড (e-Aadhaar PDF)</option>
         <option value="voter">ভোটার কার্ড (e-EPIC PDF)</option>
+        <option value="aadhaar">আধার কার্ড (e-Aadhaar PDF)</option>
         <option value="pan">প্যান কার্ড (e-PAN PDF)</option>
       </select>
 
@@ -99,7 +97,7 @@
         try {
           const pdf = await pdfjsLib.getDocument(typedarray).promise;
           const page = await pdf.getPage(1);
-          const viewport = page.getViewport({ scale: 3.0 }); // HD Rendering
+          const viewport = page.getViewport({ scale: 3.0 });
           
           const tempCanvas = document.createElement('canvas');
           const tempCtx = tempCanvas.getContext('2d');
@@ -108,16 +106,16 @@
 
           await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
 
-          // Crop parameters depending on Card Type
-          if (cardType === 'aadhaar') {
-            cropCard(tempCanvas, 'frontCanvas', 0.05, 0.60, 0.44); // Front crop
-            cropCard(tempCanvas, 'backCanvas', 0.51, 0.60, 0.44);  // Back crop
-          } else if (cardType === 'voter') {
-            cropCard(tempCanvas, 'frontCanvas', 0.10, 0.15, 0.40);
-            cropCard(tempCanvas, 'backCanvas', 0.55, 0.15, 0.40);
+          if (cardType === 'voter') {
+            // Updated coordinates specifically for Voter ID PDF layout
+            cropCard(tempCanvas, 'frontCanvas', 0.015, 0.165, 0.67, 0.355);
+            cropCard(tempCanvas, 'backCanvas', 0.370, 0.165, 0.67, 0.355);
+          } else if (cardType === 'aadhaar') {
+            cropCard(tempCanvas, 'frontCanvas', 0.62, 0.10, 0.80, 0.32);
+            cropCard(tempCanvas, 'backCanvas', 0.62, 0.50, 0.80, 0.32);
           } else if (cardType === 'pan') {
-            cropCard(tempCanvas, 'frontCanvas', 0.20, 0.20, 0.35);
-            cropCard(tempCanvas, 'backCanvas', 0.60, 0.20, 0.35);
+            cropCard(tempCanvas, 'frontCanvas', 0.68, 0.08, 0.84, 0.28);
+            cropCard(tempCanvas, 'backCanvas', 0.68, 0.50, 0.84, 0.28);
           }
 
           status.innerText = "কার্ড সঠিক সাইজে তৈরি হয়েছে!";
@@ -133,17 +131,16 @@
       fileReader.readAsArrayBuffer(file);
     });
 
-    function cropCard(sourceCanvas, targetCanvasId, startYRatio, startXRatio, heightRatio) {
+    function cropCard(sourceCanvas, targetCanvasId, startYRatio, startXRatio, widthRatio, heightRatio) {
       const targetCanvas = document.getElementById(targetCanvasId);
       const ctx = targetCanvas.getContext('2d');
 
-      // CR80 standard 300 DPI high resolution canvas size
       targetCanvas.width = 1012;
       targetCanvas.height = 638;
 
       const srcX = sourceCanvas.width * startXRatio;
       const srcY = sourceCanvas.height * startYRatio;
-      const srcWidth = sourceCanvas.width * 0.40; 
+      const srcWidth = sourceCanvas.width * widthRatio; 
       const srcHeight = sourceCanvas.height * heightRatio;
 
       ctx.drawImage(
