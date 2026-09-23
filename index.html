@@ -1,155 +1,108 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PVC Card Auto Resizer & Cutter</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-    body { background-color: #f4f6f9; padding: 15px; text-align: center; }
-    .container { max-width: 500px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h2 { color: #2c3e50; margin-bottom: 15px; font-size: 20px; }
-    .input-group { margin-bottom: 15px; text-align: left; }
-    label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px; color: #333; }
-    select, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; background: #f9f9f9; margin-bottom: 10px; }
-    .status { margin: 10px 0; font-weight: bold; color: #007bff; font-size: 14px; }
-    .preview-section { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; align-items: center; }
-    
-    .card-box {
-      width: 323px;
-      height: 204px;
-      border: 1px solid #000;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #fafafa;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    canvas { width: 100%; height: 100%; }
-    .btn-print { margin-top: 20px; width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    .btn-print:disabled { background-color: #ccc; }
+# 🪪 Easy Crop V1.5.7 - Desktop Studio
+*All-in-One PVC ID Card Auto-Cropper & Dragon Sheet Print Studio*
+*Built by Astha • Works 100% Offline • No Cloud • 100% Secure • 900 DPI*
 
-    @media print {
-      body * { visibility: hidden; }
-      .print-area, .print-area * { visibility: visible; }
-      .print-area { position: absolute; left: 0; top: 0; display: flex; flex-wrap: wrap; gap: 10px; }
-      .card-box {
-        width: 85.6mm !important;
-        height: 53.98mm !important;
-        border: 0.5px solid #000 !important;
-        border-radius: 3mm !important;
-        page-break-inside: avoid;
-      }
-    }
-  </style>
-</head>
-<body>
+---
 
-  <div class="container">
-    <h2>অল-টাইপ PVC কার্ড প্রস্তুতকারক</h2>
-    
-    <div class="input-group">
-      <label>১. কার্ডের ধরন নির্বাচন করুন:</label>
-      <select id="cardType">
-        <option value="voter">ভোটার কার্ড (e-EPIC PDF)</option>
-        <option value="aadhaar">আধার কার্ড (e-Aadhaar PDF)</option>
-        <option value="pan">প্যান কার্ড (e-PAN PDF)</option>
-      </select>
+## 🌟 Overview
 
-      <label>২. পিডিএফ ফাইল নির্বাচন করুন:</label>
-      <input type="file" id="pdfInput" accept="application/pdf">
-    </div>
+**Easy Crop V1.5.7** is a professional desktop application designed specifically for CSC (Common Service Center) operators, cyber cafes, and photo studios. It automatically detects and crops all types of Indian government PVC ID cards (Aadhaar, Voter ID, PAN Card, Driving License, Ayushman Bharat, ABHA, Ration Card) from single or multiple PDF and image files, compiles them into a ready-to-print **Dragon Sheet (A4 PVC Sheet)**, and provides one-click direct printing and high-resolution export.
 
-    <div class="status" id="statusText">পছন্দের কার্ড ও PDF সিলেক্ট করুন</div>
+---
 
-    <div class="preview-section print-area" id="printArea">
-      <div>
-        <p style="font-size: 12px; color: #555; margin-bottom: 3px;">Front Side (সামনের অংশ)</p>
-        <div class="card-box"><canvas id="frontCanvas"></canvas></div>
-      </div>
-      <div>
-        <p style="font-size: 12px; color: #555; margin-bottom: 3px;">Back Side (পেছনের অংশ)</p>
-        <div class="card-box"><canvas id="backCanvas"></canvas></div>
-      </div>
-    </div>
+## 🚀 Key Features
 
-    <button class="btn-print" id="printBtn" onclick="window.print()" disabled>প্রিন্ট / PDF ডাউনলোড</button>
-  </div>
+### 1. One-Click 'Crop Now' Batch Processing
+- Add one or multiple PDF / image files (or entire folders) to the queue.
+- Click the prominent **`✂ Crop Now`** button.
+- The engine automatically:
+  1. Detects the card type (Aadhaar, Voter, PAN, Driving License, etc.).
+  2. Extracts both **Front** and **Back** card sides with exact standard CR-80 PVC dimensions ($85.6 \times 54.0\text{ mm}$).
+  3. Composes all cards onto a single **Dragon Sheet** (A4 PVC Sheet - CSC 5-in-1 format).
+  4. Automatically exports ready-to-print PDF and Image files into the `output/` folder.
+  5. Displays the result instantly in the `[Dragon Sheet]` tab!
 
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+### 2. Multi-Format & Password Support
+- **PDF Documents:** Single and multi-page PDFs.
+- **e-Aadhaar Password Support:** Automatically prompts and decrypts password-protected e-Aadhaar files.
+- **Image Formats:** PNG, JPG, JPEG, WEBP, BMP, TIFF.
 
-    document.getElementById('pdfInput').addEventListener('change', async function(e) {
-      const file = e.target.files[0];
-      const cardType = document.getElementById('cardType').value;
-      const status = document.getElementById('statusText');
-      const printBtn = document.getElementById('printBtn');
-      
-      if (!file) return;
+### 3. Supported Card Types
+- **Aadhaar Card (UIDAI PVC)**: Standard CR-80 ($85.6 \times 54.0\text{ mm}$)
+- **Voter ID / EPIC PVC**: New PVC card layout
+- **PAN Card (NSDL / UTIITSL)**: Standard Income Tax card
+- **Driving License (Parivahan / Sarathi)**: Smart Card format
+- **Ayushman / PM-JAY / ABHA / e-Shram**: Health and labor cards
+- **All PVC Cards**: Custom and generic CR-80 ID cards
 
-      status.innerText = "প্রসেস করা হচ্ছে...";
-      printBtn.disabled = true;
+### 4. Dragon Sheet Print Generator (A4 PVC Sheet)
+- **CSC 5-in-1 Format**: Up to 5 PVC cards (Front & Back = 10 sides) arranged in 2 columns.
+- **Cut Guides**: 1px cut line border, CR-80 standard $3.18\text{ mm}$ rounded corner markers, and center dashed folding line.
+- **Resolution**: Choose between **900 DPI (Ultra HD)**, **600 DPI (High Quality)**, or **300 DPI (Commercial Print)**.
 
-      const fileReader = new FileReader();
-      fileReader.onload = async function() {
-        const typedarray = new Uint8Array(this.result);
-        
-        try {
-          const pdf = await pdfjsLib.getDocument(typedarray).promise;
-          const page = await pdf.getPage(1);
-          const viewport = page.getViewport({ scale: 3.0 });
-          
-          const tempCanvas = document.createElement('canvas');
-          const tempCtx = tempCanvas.getContext('2d');
-          tempCanvas.width = viewport.width;
-          tempCanvas.height = viewport.height;
+### 5. Triple-View Interactive Preview Canvas
+- **`[Original]`**: Displays the source document with draggable Front & Back bounding boxes.
+- **`[Cropped]`**: Shows the extracted Front and Back cards side-by-side.
+- **`[Dragon Sheet]`**: Shows the final composed A4 Dragon Sheet layout.
+- **Zoom & Pan**: Full mouse wheel zoom (`[-]`, `100%`, `[+]`, `Fit`) and drag-to-pan.
+- **Advanced Crop (manual)**: Toggle manual box adjustments if custom framing is desired.
 
-          await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
+### 6. Direct Windows Printing
+- Compatible with all Windows photo and PVC printers (including **EPSON L8050, L805, L3250 series**).
+- One-click **`Print Now`** button sends the generated Dragon Sheet directly to your printer.
+- **`Open Output`** button instantly opens the `output/` directory in Windows Explorer.
 
-          if (cardType === 'voter') {
-            // Updated coordinates specifically for Voter ID PDF layout
-            cropCard(tempCanvas, 'frontCanvas', 0.015, 0.165, 0.67, 0.355);
-            cropCard(tempCanvas, 'backCanvas', 0.370, 0.165, 0.67, 0.355);
-          } else if (cardType === 'aadhaar') {
-            cropCard(tempCanvas, 'frontCanvas', 0.62, 0.10, 0.80, 0.32);
-            cropCard(tempCanvas, 'backCanvas', 0.62, 0.50, 0.80, 0.32);
-          } else if (cardType === 'pan') {
-            cropCard(tempCanvas, 'frontCanvas', 0.68, 0.08, 0.84, 0.28);
-            cropCard(tempCanvas, 'backCanvas', 0.68, 0.50, 0.84, 0.28);
-          }
+---
 
-          status.innerText = "কার্ড সঠিক সাইজে তৈরি হয়েছে!";
-          status.style.color = "green";
-          printBtn.disabled = false;
-        } catch (error) {
-          console.error(error);
-          status.innerText = "PDF ফাইলটি পড়া যায়নি! সঠিক ফাইলের ধরন সিলেক্ট করুন।";
-          status.style.color = "red";
-        }
-      };
+## 💻 How to Run
 
-      fileReader.readAsArrayBuffer(file);
-    });
+### Method 1: One-Click Launcher (Recommended)
+Double-click the **`run_app.bat`** file in the project folder.
 
-    function cropCard(sourceCanvas, targetCanvasId, startYRatio, startXRatio, widthRatio, heightRatio) {
-      const targetCanvas = document.getElementById(targetCanvasId);
-      const ctx = targetCanvas.getContext('2d');
+### Method 2: Command Line
+```bash
+# 1. Install dependencies (if not already installed)
+pip install -r requirements.txt
 
-      targetCanvas.width = 1012;
-      targetCanvas.height = 638;
+# 2. Run Easy Crop
+python main.py
+```
 
-      const srcX = sourceCanvas.width * startXRatio;
-      const srcY = sourceCanvas.height * startYRatio;
-      const srcWidth = sourceCanvas.width * widthRatio; 
-      const srcHeight = sourceCanvas.height * heightRatio;
+---
 
-      ctx.drawImage(
-        sourceCanvas,
-        srcX, srcY, srcWidth, srcHeight,
-        0, 0, targetCanvas.width, targetCanvas.height
-      );
-    }
-  </script>
+## 📖 Quick Start Guide
 
-</body>
-</html>
+1. **Add Files**: Click **`+ Add Files`** or **`📁 Add Folder`** to load your PDF or image documents.
+2. **Password Unlock**: If an e-Aadhaar file is password protected, enter the password (e.g. First 4 letters of name in CAPS + Year of birth, like `RAHU1995`).
+3. **Crop Now**: Click the big **`✂ Crop Now`** button.
+4. **Preview & Print**:
+   - The final print sheet appears automatically in the **`Dragon Sheet`** preview tab.
+   - Click **`Print Now`** to print directly on your printer, or
+   - Click **`Open Output`** to view the saved 900 DPI PDF and PNG files in Windows Explorer.
+
+---
+
+## 📂 Directory Structure
+
+```
+Crop Card/
+├── run_app.bat                     # Windows one-click launcher
+├── requirements.txt                # Python dependencies (Pillow, pypdf, pypdfium2)
+├── main.py                         # Application entry point (High-DPI aware)
+├── README.md                       # Complete documentation
+├── output/                         # Automatically created directory for generated Dragon Sheets
+└── app/
+    ├── __init__.py
+    ├── config.py                   # Dimension constants and CR-80 card presets
+    ├── document_loader.py          # PDF & image loader with password decryption
+    ├── auto_crop_engine.py         # AI / anchor based auto-detection for all cards
+    ├── dragon_sheet_engine.py      # Multi-card Dragon Sheet (A4 PVC Sheet) composition
+    ├── image_processor.py          # Quality enhancement filters and 900 DPI rendering
+    ├── print_service.py            # Windows direct printing & PDF export
+    └── ui/
+        ├── __init__.py
+        ├── easy_crop_theme.py      # Dark/green/blue theme styles matching screenshot
+        ├── preview_canvas.py       # Triple-view canvas (Original, Cropped, Dragon Sheet)
+        ├── dialogs.py              # Output Settings, Card Type, Quality, About dialogs
+        └── easy_crop_window.py     # Main application window
+```
