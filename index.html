@@ -1,4 +1,4 @@
-# 🪪 Easy Crop V1.5.7 - Desktop Studio
+# 🪪 CropCraft V1.5.7 - Desktop Studio
 *All-in-One PVC ID Card Auto-Cropper & Dragon Sheet Print Studio*
 *Built by Astha • Works 100% Offline • No Cloud • 100% Secure • 900 DPI*
 
@@ -6,7 +6,7 @@
 
 ## 🌟 Overview
 
-**Easy Crop V1.5.7** is a professional desktop application designed specifically for CSC (Common Service Center) operators, cyber cafes, and photo studios. It automatically detects and crops all types of Indian government PVC ID cards (Aadhaar, Voter ID, PAN Card, Driving License, Ayushman Bharat, ABHA, Ration Card) from single or multiple PDF and image files, compiles them into a ready-to-print **Dragon Sheet (A4 PVC Sheet)**, and provides one-click direct printing and high-resolution export.
+**CropCraft V1.5.7** is a professional desktop application designed specifically for CSC (Common Service Center) operators, cyber cafes, and photo studios. It automatically detects and crops all types of Indian government PVC ID cards (Aadhaar, Voter ID, PAN Card, Driving License, Ayushman Bharat, ABHA, Ration Card) from single or multiple PDF and image files, compiles them into a ready-to-print **Dragon Sheet (A4 PVC Sheet)**, and provides one-click direct printing and high-resolution export.
 
 ---
 
@@ -17,7 +17,7 @@
 - Click the prominent **`✂ Crop Now`** button.
 - The engine automatically:
   1. Detects the card type (Aadhaar, Voter, PAN, Driving License, etc.).
-  2. Extracts both **Front** and **Back** card sides with exact standard CR-80 PVC dimensions ($85.6 \times 54.0\text{ mm}$).
+  2. Extracts both **Front** and **Back** card sides with exact standard CR-80 PVC dimensions (85.6 × 54.0 mm).
   3. Composes all cards onto a single **Dragon Sheet** (A4 PVC Sheet - CSC 5-in-1 format).
   4. Automatically exports ready-to-print PDF and Image files into the `output/` folder.
   5. Displays the result instantly in the `[Dragon Sheet]` tab!
@@ -28,7 +28,7 @@
 - **Image Formats:** PNG, JPG, JPEG, WEBP, BMP, TIFF.
 
 ### 3. Supported Card Types
-- **Aadhaar Card (UIDAI PVC)**: Standard CR-80 ($85.6 \times 54.0\text{ mm}$)
+- **Aadhaar Card (UIDAI PVC)**: Standard CR-80 (85.6 × 54.0 mm)
 - **Voter ID / EPIC PVC**: New PVC card layout
 - **PAN Card (NSDL / UTIITSL)**: Standard Income Tax card
 - **Driving License (Parivahan / Sarathi)**: Smart Card format
@@ -37,7 +37,7 @@
 
 ### 4. Dragon Sheet Print Generator (A4 PVC Sheet)
 - **CSC 5-in-1 Format**: Up to 5 PVC cards (Front & Back = 10 sides) arranged in 2 columns.
-- **Cut Guides**: 1px cut line border, CR-80 standard $3.18\text{ mm}$ rounded corner markers, and center dashed folding line.
+- **Cut Guides**: 1px cut line border, CR-80 standard 3.18 mm rounded corner markers, and center dashed folding line.
 - **Resolution**: Choose between **900 DPI (Ultra HD)**, **600 DPI (High Quality)**, or **300 DPI (Commercial Print)**.
 
 ### 5. Triple-View Interactive Preview Canvas
@@ -64,45 +64,5 @@ Double-click the **`run_app.bat`** file in the project folder.
 # 1. Install dependencies (if not already installed)
 pip install -r requirements.txt
 
-# 2. Run Easy Crop
+# 2. Run CropCraft
 python main.py
-```
-
----
-
-## 📖 Quick Start Guide
-
-1. **Add Files**: Click **`+ Add Files`** or **`📁 Add Folder`** to load your PDF or image documents.
-2. **Password Unlock**: If an e-Aadhaar file is password protected, enter the password (e.g. First 4 letters of name in CAPS + Year of birth, like `RAHU1995`).
-3. **Crop Now**: Click the big **`✂ Crop Now`** button.
-4. **Preview & Print**:
-   - The final print sheet appears automatically in the **`Dragon Sheet`** preview tab.
-   - Click **`Print Now`** to print directly on your printer, or
-   - Click **`Open Output`** to view the saved 900 DPI PDF and PNG files in Windows Explorer.
-
----
-
-## 📂 Directory Structure
-
-```
-Crop Card/
-├── run_app.bat                     # Windows one-click launcher
-├── requirements.txt                # Python dependencies (Pillow, pypdf, pypdfium2)
-├── main.py                         # Application entry point (High-DPI aware)
-├── README.md                       # Complete documentation
-├── output/                         # Automatically created directory for generated Dragon Sheets
-└── app/
-    ├── __init__.py
-    ├── config.py                   # Dimension constants and CR-80 card presets
-    ├── document_loader.py          # PDF & image loader with password decryption
-    ├── auto_crop_engine.py         # AI / anchor based auto-detection for all cards
-    ├── dragon_sheet_engine.py      # Multi-card Dragon Sheet (A4 PVC Sheet) composition
-    ├── image_processor.py          # Quality enhancement filters and 900 DPI rendering
-    ├── print_service.py            # Windows direct printing & PDF export
-    └── ui/
-        ├── __init__.py
-        ├── easy_crop_theme.py      # Dark/green/blue theme styles matching screenshot
-        ├── preview_canvas.py       # Triple-view canvas (Original, Cropped, Dragon Sheet)
-        ├── dialogs.py              # Output Settings, Card Type, Quality, About dialogs
-        └── easy_crop_window.py     # Main application window
-```
